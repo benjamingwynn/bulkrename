@@ -3,6 +3,8 @@ import fsp from "fs/promises"
 import fs from "fs"
 import path from "path"
 
+const tmpFileName = "/tmp/bulkrename.txt"
+
 // lazy argument parsing
 const target = process.argv
 	.slice(2)
@@ -46,14 +48,17 @@ for (const [absPath, isDir, relPath, depth] of contents) {
 	output.push("\t".repeat(depth) + relPath)
 }
 
-if (!noCreate) await fsp.writeFile("/tmp/bulkrename", output.join("\n"))
+if (!noCreate) await fsp.writeFile(tmpFileName, output.join("\n"))
 if (verbose) console.log("editor:", process.env.EDITOR)
-if (!noEdit) cproc.execSync(`${process.env.EDITOR ?? "nano"} /tmp/bulkrename`)
+if (!noEdit) cproc.execSync(`${process.env.EDITOR ?? "nano"} ${tmpFileName}`)
 if (verbose) console.log("editor exited...")
 
 // then we diff
-const newInput = (await fsp.readFile("/tmp/bulkrename", "utf8")).split("\n")
-if (newInput.length !== output.length) {
+const newInput = (await fsp.readFile(tmpFileName, "utf8")).split("\n")
+if (newInput.length === output.length + 1 && newInput.slice(-1)[0] === "") {
+	// hack for trailing newline like with vscode/nano
+	newInput.pop()
+} else if (newInput.length !== output.length) {
 	throw new Error("Number of lines back from editor differs to the original number of lines. You are not supposed to remove/rearrange lines.")
 }
 for (let i = newInput.length - 1; i >= 0; i--) {

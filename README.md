@@ -10,8 +10,6 @@ the line numbers must be kept consistent, you have the following operations avai
 
 you can set your editor with the `EDITOR` environment variable
 
-(make sure your editor isn't automatically appending trailing newlines to files)
-
 ## usage:
 
 1. clone the repo
